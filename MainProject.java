@@ -1,338 +1,225 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 
-class User {
-    String username;
-    String password;
-    String role;
-}
-
-class Admin extends User {
-    void tambahNasabah(String username, String password, Bank bank) {
-        // Periksa apakah pengguna sudah ada
-        for (User user : bank.users) {
-            if (user.username.equals(username)) {
-                System.out.println("Username sudah ada");
-                return;
-            }
-        }
-
-        // Jika pengguna belum ada, buat nasabah baru dan tambahkan ke daftar pengguna bank
-        Nasabah nasabah = new Nasabah();
-        nasabah.username = username;
-        nasabah.password = password;
-        nasabah.role = "nasabah";
-        bank.users.add(nasabah);
-
-        // Buat akun untuk nasabah baru
-        Rekening rekening = new Rekening();
-        rekening.nomorRekening = "REK" + (bank.rekenings.size() + 1);
-        rekening.saldo = 0;
-        rekening.riwayatTransaksi = new ArrayList<>();
-        nasabah.nomorRekening = rekening.nomorRekening; // Tautkan nomor rekening ke nasabah
-        bank.rekenings.add(rekening);
-
-        System.out.println("Nasabah berhasil ditambahkan");
-    }
-
-    void lihatDetailNasabah(String username, Bank bank) {
-        // Temukan nasabah
-        for (User user : bank.users) {
-            if (user.username.equals(username) && user.role.equals("nasabah")) {
-                Nasabah nasabah = (Nasabah) user;
-
-                // Tampilkan detail nasabah
-                System.out.println("Username: " + nasabah.username);
-                System.out.println("Role: " + nasabah.role);
-
-                // Temukan dan tampilkan detail akun nasabah
-                for (Rekening rekening : bank.rekenings) {
-                    if (rekening.nomorRekening.equals(nasabah.nomorRekening)) {
-                        System.out.println("Nomor Rekening: " + rekening.nomorRekening);
-                        System.out.println("Saldo: " + rekening.saldo);
-                        return;
-                    }
-                }
-            }
-        }
-        System.out.println("Nasabah tidak ditemukan");
-    }
-
-    void lihatRiwayatTransaksi(String nomorRekening, Bank bank) {
-        // Temukan akun
-        for (Rekening rekening : bank.rekenings) {
-            if (rekening.nomorRekening.equals(nomorRekening)) {
-                // Tampilkan riwayat transaksi
-                for (Transaksi transaksi : rekening.riwayatTransaksi) {
-                    System.out.println("Jenis: " + transaksi.jenis);
-                    System.out.println("Jumlah: " + transaksi.jumlah);
-                    System.out.println();
-                }
-                return;
-            }
-        }
-        System.out.println("Akun tidak ditemukan");
-    }
-}
-
-class Nasabah extends User {
-    String nomorRekening;
-
-    void cekSaldo(Bank bank) {
-        for (Rekening rekening : bank.rekenings) {
-            if (rekening.nomorRekening.equals(this.nomorRekening)) {
-                System.out.println("Saldo Anda: " + rekening.saldo);
-                return;
-            }
-        }
-        System.out.println("Akun tidak ditemukan");
-    }
-
-    void setor(Bank bank, double jumlah) {
-        for (Rekening rekening : bank.rekenings) {
-            if (rekening.nomorRekening.equals(this.nomorRekening)) {
-                rekening.saldo += jumlah;
-                System.out.println("Setoran berhasil");
-                return;
-            }
-        }
-        System.out.println("Akun tidak ditemukan");
-    }
-
-    void tarik(Bank bank, double jumlah) {
-        for (Rekening rekening : bank.rekenings) {
-            if (rekening.nomorRekening.equals(this.nomorRekening)) {
-                if (rekening.saldo >= jumlah) {
-                    rekening.saldo -= jumlah;
-                    System.out.println("Penarikan berhasil");
-                } else {
-                    System.out.println("Saldo tidak mencukupi");
-                }
-                return;
-            }
-        }
-        System.out.println("Akun tidak ditemukan");
-    }
-
-    void transfer(Bank bank, String keNomorRekening, double jumlah) {
-        Rekening keRekening = null;
-        Rekening dariRekening = null;
-
-        for (Rekening rekening : bank.rekenings) {
-            if (rekening.nomorRekening.equals(this.nomorRekening)) {
-                dariRekening = rekening;
-            } else if (rekening.nomorRekening.equals(keNomorRekening)) {
-                keRekening = rekening;
-            }
-        }
-
-        if (dariRekening != null && keRekening != null) {
-            if (dariRekening.saldo >= jumlah) {
-                dariRekening.saldo -= jumlah;
-                keRekening.saldo += jumlah;
-                System.out.println("Transfer berhasil");
-            } else {
-                System.out.println("Saldo tidak mencukupi");
-            }
-        } else {
-            System.out.println("Akun tidak ditemukan");
-        }
-    }
-}
-
-class Rekening {
-    String nomorRekening;
-    double saldo;
-    List<Transaksi> riwayatTransaksi;
-}
-
-class Bank {
-    List<User> users;
-    List<Rekening> rekenings;
-}
-
+// Kelas untuk merepresentasikan transaksi
 class Transaksi {
-    double jumlah;
-    String jenis;
-    Rekening rekening;
-}
+    private String pengirim;
+    private String penerima;
+    private double jumlah;
 
-class AplikasiPerbankan {
-    Bank bank;
-
-    void login(String username, String password) {
-        for (User user : bank.users) {
-            if (user.username.equals(username) && user.password.equals(password)) {
-                System.out.println("Login berhasil");
-                return;
-            }
-        }
-        System.out.println("Username atau password salah");
+    public Transaksi(String pengirim, String penerima, double jumlah) {
+        this.pengirim = pengirim;
+        this.penerima = penerima;
+        this.jumlah = jumlah;
     }
 
-    void registrasi(String username, String password, String peran) {
-        // Periksa apakah pengguna sudah ada
-        for (User user : bank.users) {
-            if (user.username.equals(username)) {
-                System.out.println("Username sudah ada");
-                return;
-            }
-        }
-
-        // Jika pengguna belum ada, buat pengguna baru dan tambahkan ke daftar pengguna bank
-        if (peran.equals("admin")) {
-            Admin admin = new Admin();
-            admin.username = username;
-            admin.password = password;
-            admin.role = peran;
-            bank.users.add(admin);
-        } else if (peran.equals("nasabah")) {
-            Nasabah nasabah = new Nasabah();
-            nasabah.username = username;
-            nasabah.password = password;
-            nasabah.role = peran;
-            bank.users.add(nasabah);
-        } else {
-            System.out.println("Peran tidak valid");
-        }
+    public String getPengirim() {
+        return pengirim;
     }
 
-    void setorUang(String nomorRekening, double jumlah) {
-        // Temukan akun
-        for (Rekening rekening : bank.rekenings) {
-            if (rekening.nomorRekening.equals(nomorRekening)) {
-                // Perbarui saldo
-                rekening.saldo += jumlah;
-
-                // Catat transaksi
-                Transaksi transaksi = new Transaksi();
-                transaksi.jumlah = jumlah;
-                transaksi.jenis = "setor";
-                transaksi.rekening = rekening;
-                rekening.riwayatTransaksi.add(transaksi);
-
-                System.out.println("Setoran berhasil");
-                return;
-            }
-        }
-        System.out.println("Akun tidak ditemukan");
+    public String getPenerima() {
+        return penerima;
     }
 
-    void tarikUang(String nomorRekening, double jumlah) {
-        // Temukan akun
-        for (Rekening rekening : bank.rekenings) {
-            if (rekening.nomorRekening.equals(nomorRekening)) {
-                // Periksa apakah cukup saldo
-                if (rekening.saldo >= jumlah) {
-                    // Perbarui saldo
-                    rekening.saldo -= jumlah;
-
-                    // Catat transaksi
-                    Transaksi transaksi = new Transaksi();
-                    transaksi.jumlah = jumlah;
-                    transaksi.jenis = "tarik";
-                    transaksi.rekening = rekening;
-                    rekening.riwayatTransaksi.add(transaksi);
-
-                    System.out.println("Penarikan berhasil");
-                } else {
-                    System.out.println("Saldo tidak mencukupi");
-                }
-                return;
-            }
-        }
-        System.out.println("Akun tidak ditemukan");
-    }
-
-    void transferUang(String dariNomorRekening, String keNomorRekening, double jumlah) {
-        Rekening dariRekening = null;
-        Rekening keRekening = null;
-
-        // Temukan akun sumber dan akun tujuan
-        for (Rekening rekening : bank.rekenings) {
-            if (rekening.nomorRekening.equals(dariNomorRekening)) {
-                dariRekening = rekening;
-            } else if (rekening.nomorRekening.equals(keNomorRekening)) {
-                keRekening = rekening;
-            }
-        }
-
-        if (dariRekening != null && keRekening != null) {
-            // Periksa apakah cukup saldo di akun sumber
-            if (dariRekening.saldo >= jumlah) {
-                // Perbarui saldo
-                dariRekening.saldo -= jumlah;
-                keRekening.saldo += jumlah;
-
-                // Catat transaksi dari akun sumber
-                Transaksi transaksiDari = new Transaksi();
-                transaksiDari.jumlah = jumlah;
-                transaksiDari.jenis = "transfer";
-                transaksiDari.rekening = dariRekening;
-                dariRekening.riwayatTransaksi.add(transaksiDari);
-
-                // Catat transaksi ke akun tujuan
-                Transaksi transaksiKe = new Transaksi();
-                transaksiKe.jumlah = jumlah;
-                transaksiKe.jenis = "terima";
-                transaksiKe.rekening = keRekening;
-                keRekening.riwayatTransaksi.add(transaksiKe);
-
-                System.out.println("Transfer berhasil");
-            } else {
-                System.out.println("Saldo tidak mencukupi");
-            }
-        } else {
-            System.out.println("Akun tidak ditemukan");
-        }
-    }
-
-    void tambahNasabah(String username, String password) {
-        Admin admin = new Admin();
-        admin.tambahNasabah(username, password, bank);
-    }
-
-    void lihatDetailNasabah(String username) {
-        Admin admin = new Admin();
-        admin.lihatDetailNasabah(username, bank);
-    }
-
-    void lihatRiwayatTransaksi(String nomorRekening) {
-        Admin admin = new Admin();
-        admin.lihatRiwayatTransaksi(nomorRekening, bank);
+    public double getJumlah() {
+        return jumlah;
     }
 }
 
+// Kelas untuk merepresentasikan nasabah
+class Nasabah {
+    private String username;
+    private String password;
+    private double saldo;
+    private List<Transaksi> riwayatTransaksi;
+
+    public Nasabah(String username, String password) {
+        this.username = username;
+        this.password = password;
+        this.saldo = 0.0;
+        this.riwayatTransaksi = new ArrayList<>();
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public double getSaldo() {
+        return saldo;
+    }
+
+    public List<Transaksi> getRiwayatTransaksi() {
+        return riwayatTransaksi;
+    }
+
+    public void setor(double jumlah) {
+        saldo += jumlah;
+        riwayatTransaksi.add(new Transaksi(username, "Setor", jumlah));
+    }
+
+    public void transfer(Nasabah penerima, double jumlah) {
+        if (saldo >= jumlah) {
+            saldo -= jumlah;
+            penerima.setor(jumlah);
+            riwayatTransaksi.add(new Transaksi(username, penerima.getUsername(), jumlah));
+        } else {
+            System.out.println("Saldo tidak mencukupi untuk transfer.");
+        }
+    }
+}
+
+// Kelas untuk merepresentasikan sistem pencatatan uang
+class SistemPencatatanUang {
+    public Map<String, Nasabah> nasabahMap;
+    public Nasabah penggunaMasuk;
+
+    public SistemPencatatanUang() {
+        this.nasabahMap = new HashMap<>();
+        nasabahMap.put("admin", new Nasabah("admin", "adminpass"));
+        nasabahMap.put("user1", new Nasabah("user1", "userpass"));
+        nasabahMap.put("user2", new Nasabah("user2", "userpass"));
+    }
+
+    public boolean login(String username, String password) {
+        if (nasabahMap.containsKey(username) && nasabahMap.get(username).getPassword().equals(password)) {
+            penggunaMasuk = nasabahMap.get(username);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void logout() {
+        penggunaMasuk = null;
+    }
+
+    public void tampilkanSaldo() {
+        System.out.println("Saldo: $" + penggunaMasuk.getSaldo());
+    }
+
+    public void tampilkanRiwayatTransaksi() {
+        List<Transaksi> transaksiList = penggunaMasuk.getRiwayatTransaksi();
+        System.out.println("Riwayat Transaksi untuk " + penggunaMasuk.getUsername() + ":");
+        for (Transaksi transaksi : transaksiList) {
+            System.out.println("Dari: " + transaksi.getPengirim() +
+                    ", Ke: " + transaksi.getPenerima() +
+                    ", Jumlah: $" + transaksi.getJumlah());
+        }
+    }
+
+    public void tampilkanSemuaNasabah() {
+        if (penggunaMasuk.getUsername().equals("admin")) {
+            System.out.println("Daftar Semua Nasabah:");
+            for (Nasabah nasabah : nasabahMap.values()) {
+                System.out.println("Username: " + nasabah.getUsername() + ", Saldo: $" + nasabah.getSaldo());
+            }
+        } else {
+            System.out.println("Akses ditolak. Akses admin diperlukan.");
+        }
+    }
+
+    public void tambahNasabah(String username, String password) {
+        if (penggunaMasuk.getUsername().equals("admin")) {
+            nasabahMap.put(username, new Nasabah(username, password));
+            System.out.println("Nasabah " + username + " ditambahkan dengan sukses.");
+        } else {
+            System.out.println("Akses ditolak. Akses admin diperlukan.");
+        }
+    }
+}
+
+// Kelas utama untuk menjalankan program
 public class MainProject {
     public static void main(String[] args) {
-        AplikasiPerbankan aplikasiBank = new AplikasiPerbankan();
-        aplikasiBank.bank = new Bank();
-        aplikasiBank.bank.users = new ArrayList<>();
-        aplikasiBank.bank.rekenings = new ArrayList<>();
+        SistemPencatatanUang sistemPencatatanUang = new SistemPencatatanUang();
+        Scanner scanner = new Scanner(System.in);
 
-        // Registrasi admin baru
-        aplikasiBank.registrasi("admin1", "password1", "admin");
+        while (true) {
+            System.out.println("Selamat datang di Sistem Pencatatan Uang");
+            System.out.print("Masukkan username: ");
+            String username = scanner.nextLine();
+            System.out.print("Masukkan password: ");
+            String password = scanner.nextLine();
 
-        // Admin login
-        aplikasiBank.login("admin1", "password1");
+            if (sistemPencatatanUang.login(username, password)) {
+                while (true) {
+                    System.out.println("\n1. Setor");
+                    System.out.println("2. Transfer");
+                    System.out.println("3. Lihat Saldo");
+                    System.out.println("4. Lihat Riwayat Transaksi");
+                    System.out.println("5. Logout");
 
-        // Admin menambahkan nasabah baru
-        aplikasiBank.tambahNasabah("nasabah1", "password2");
+                    if (username.equals("admin")) {
+                        System.out.println("6. Lihat Semua Nasabah");
+                        System.out.println("7. Tambah Nasabah");
+                    }
 
-        // Nasabah login
-        aplikasiBank.login("nasabah1", "password2");
+                    System.out.print("Pilih opsi: ");
+                    int pilihan = Integer.parseInt(scanner.nextLine());
 
-        // Nasabah melakukan setoran
-        aplikasiBank.setorUang("REK1", 1000);
+                    switch (pilihan) {
+                        case 1:
+                            System.out.print("Masukkan jumlah setoran: $");
+                            double jumlahSetoran = Double.parseDouble(scanner.nextLine());
+                            sistemPencatatanUang.penggunaMasuk.setor(jumlahSetoran);
+                            break;
+                        case 2:
+                            System.out.print("Masukkan username penerima: ");
+                            String usernamePenerima = scanner.nextLine();
+                            System.out.print("Masukkan jumlah transfer: $");
+                            double jumlahTransfer = Double.parseDouble(scanner.nextLine());
+                            if (sistemPencatatanUang.nasabahMap.containsKey(usernamePenerima)) {
+                                Nasabah penerima = sistemPencatatanUang.nasabahMap.get(usernamePenerima);
+                                if (sistemPencatatanUang.penggunaMasuk.getSaldo() >= jumlahTransfer) {
+                                    sistemPencatatanUang.penggunaMasuk.transfer(penerima, jumlahTransfer);
+                                } else {
+                                    System.out.println("Saldo tidak mencukupi untuk transfer.");
+                                }
+                            } else {
+                                System.out.println("Penerima tidak ditemukan.");
+                            }
+                            break;
+                        case 3:
+                            sistemPencatatanUang.tampilkanSaldo();
+                            break;
+                        case 4:
+                            sistemPencatatanUang.tampilkanRiwayatTransaksi();
+                            break;
+                        case 5:
+                            sistemPencatatanUang.logout();
+                            break;
+                        case 6:
+                            if (username.equals("admin")) {
+                                sistemPencatatanUang.tampilkanSemuaNasabah();
+                            }
+                            break;
+                        case 7:
+                            if (username.equals("admin")) {
+                                System.out.print("Masukkan username nasabah baru: ");
+                                String usernameBaru = scanner.nextLine();
+                                System.out.print("Masukkan password nasabah baru: ");
+                                String passwordBaru = scanner.nextLine();
+                                sistemPencatatanUang.tambahNasabah(usernameBaru, passwordBaru);
+                            }
+                            break;
+                        default:
+                            System.out.println("Pilihan tidak valid. Silakan coba lagi.");
+                    }
 
-        // Nasabah cek saldo
-        Nasabah nasabah = (Nasabah) aplikasiBank.bank.users.get(1);
-        nasabah.cekSaldo(aplikasiBank.bank);
-
-        // Admin melihat detail nasabah
-        aplikasiBank.lihatDetailNasabah("nasabah1");
-
-        // Admin melihat riwayat transaksi
-        aplikasiBank.lihatRiwayatTransaksi("REK1");
+                    if (pilihan == 5) {
+                        break;
+                    }
+                }
+            } else {
+                System.out.println("Username atau password tidak valid. Silakan coba lagi.");
+            }
+        }
     }
 }
