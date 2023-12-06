@@ -4,221 +4,321 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-// Kelas untuk merepresentasikan transaksi
+// Kelas dasar untuk Pengguna
+class Pengguna {
+    private String namaPengguna;
+    private String kataSandi;
+
+    public Pengguna(String namaPengguna, String kataSandi) {
+        this.namaPengguna = namaPengguna;
+        this.kataSandi = kataSandi;
+    }
+
+    public String getNamaPengguna() {
+        return namaPengguna;
+    }
+    public String getKataSandi(){
+        return kataSandi;
+    }
+
+    // Metode untuk menampilkan informasi pengguna
+    public void tampilkanInfo() {
+        System.out.println("Nama Pengguna: " + namaPengguna);
+    }
+}
+
+// Kelas Admin yang mewarisi dari Pengguna
+class Admin extends Pengguna {
+    public Admin(String namaPengguna, String kataSandi) {
+        super(namaPengguna, kataSandi);
+    }
+
+    // Metode untuk menampilkan semua informasi pengguna
+    public void tampilkanSemuaInfoPengguna(Map<String, RegularUser> pengguna) {
+        System.out.println("Semua Informasi Pengguna:");
+        for (RegularUser user : pengguna.values()) {
+            user.tampilkanInfo();
+        }
+    }
+
+    // Metode untuk melihat info nasabah berdasarkan nama pengguna
+    public void lihatInfoNasabah(String namaPengguna, Map<String, RegularUser> pengguna) {
+        RegularUser nasabah = pengguna.get(namaPengguna);
+        if (nasabah != null) {
+            nasabah.tampilkanInfo();
+        } else {
+            System.out.println("Nasabah tidak ditemukan.");
+        }
+    }
+
+    // Metode untuk melakukan operasi pada pengguna
+    public void lakukanOperasiPadaPengguna(int operasi, Map<String, RegularUser> pengguna) {
+        Scanner scanner = new Scanner(System.in);
+        switch (operasi) {
+            case 1:
+                // Lihat info nasabah
+                System.out.print("Masukkan nama pengguna Nasabah: ");
+                String namaNasabah = scanner.next();
+                lihatInfoNasabah(namaNasabah, pengguna);
+                break;
+
+            default:
+                System.out.println("Operasi tidak valid.");
+        }
+    }
+}
+
+// Kelas RegularUser yang mewarisi dari Pengguna
+class RegularUser extends Pengguna {
+    private List<Transaksi> transaksi;
+    private double saldo;
+
+    public RegularUser(String namaPengguna, String kataSandi) {
+        super(namaPengguna, kataSandi);
+        this.transaksi = new ArrayList<>();
+        this.saldo = 0.0;
+    }
+
+    // Metode untuk menampilkan informasi pengguna, saldo, dan riwayat transaksi
+    @Override
+    public void tampilkanInfo() {
+        super.tampilkanInfo();
+        System.out.println("Saldo: " + saldo);
+        System.out.println("Riwayat Transaksi:");
+        for (Transaksi t : transaksi) {
+            t.tampilkanInfo();
+        }
+    }
+
+    // Metode untuk menambahkan transaksi
+    public void tambahTransaksi(Transaksi transaksi) {
+        this.transaksi.add(transaksi);
+    }
+
+    // Metode untuk menambah saldo
+    public void tambahSaldo(double jumlah) {
+        saldo += jumlah;
+        Transaksi transaksi = new Transaksi("Tambah Saldo", jumlah);
+        tambahTransaksi(transaksi);
+    }
+
+    // Metode untuk mengambil saldo
+    public void ambilSaldo(double jumlah) {
+        if (saldo >= jumlah) {
+            saldo -= jumlah;
+            Transaksi transaksi = new Transaksi("Ambil Saldo", jumlah);
+            tambahTransaksi(transaksi);
+            System.out.println("Saldo berhasil diambil.");
+        } else {
+            System.out.println("Saldo tidak mencukupi.");
+        }
+    }
+
+    // Metode untuk menampilkan riwayat transaksi
+    public void tampilkanRiwayatTransaksi() {
+        System.out.println("Riwayat Transaksi:");
+        for (Transaksi t : transaksi) {
+            t.tampilkanInfo();
+        }
+    }
+}
+
+// Kelas Transaksi untuk merepresentasikan transaksi keuangan
 class Transaksi {
-    private String pengirim;
-    private String penerima;
+    private String jenis;
     private double jumlah;
 
-    public Transaksi(String pengirim, String penerima, double jumlah) {
-        this.pengirim = pengirim;
-        this.penerima = penerima;
+    public Transaksi(String jenis, double jumlah) {
+        this.jenis = jenis;
         this.jumlah = jumlah;
     }
 
-    public String getPengirim() {
-        return pengirim;
-    }
-
-    public String getPenerima() {
-        return penerima;
-    }
-
-    public double getJumlah() {
-        return jumlah;
+    // Metode untuk menampilkan informasi transaksi
+    public void tampilkanInfo() {
+        System.out.println("Jenis: " + jenis + ", Jumlah: " + jumlah);
     }
 }
 
-// Kelas untuk merepresentasikan nasabah
-class Nasabah {
-    private String username;
-    private String password;
-    private double saldo;
-    private List<Transaksi> riwayatTransaksi;
+// Kelas Bank yang mewakili seluruh sistem perbankan
+class Bank {
+    private Map<String, RegularUser> pengguna;
+    private Admin admin;
 
-    public Nasabah(String username, String password) {
-        this.username = username;
-        this.password = password;
-        this.saldo = 0.0;
-        this.riwayatTransaksi = new ArrayList<>();
+    public Bank() {
+        this.pengguna = new HashMap<>();
+        this.admin = new Admin("admin", "adminpass");
     }
 
-    public String getUsername() {
-        return username;
+    // Metode untuk menambahkan pengguna baru
+    public void tambahPengguna(RegularUser pengguna) {
+        this.pengguna.put(pengguna.getNamaPengguna(), pengguna);
     }
 
-    public String getPassword() {
-        return password;
-    }
+    // Metode untuk melakukan transaksi antar pengguna
+    public void lakukanTransaksi(String pengirimNamaPengguna, String penerimaNamaPengguna, double jumlah) {
+        RegularUser pengirim = pengguna.get(pengirimNamaPengguna);
+        RegularUser penerima = pengguna.get(penerimaNamaPengguna);
 
-    public double getSaldo() {
-        return saldo;
-    }
-
-    public List<Transaksi> getRiwayatTransaksi() {
-        return riwayatTransaksi;
-    }
-
-    public void setor(double jumlah) {
-        saldo += jumlah;
-        riwayatTransaksi.add(new Transaksi(username, "Setor", jumlah));
-    }
-
-    public void transfer(Nasabah penerima, double jumlah) {
-        if (saldo >= jumlah) {
-            saldo -= jumlah;
-            penerima.setor(jumlah);
-            riwayatTransaksi.add(new Transaksi(username, penerima.getUsername(), jumlah));
+        if (pengirim != null && penerima != null) {
+            Transaksi transaksi = new Transaksi("Transfer", jumlah);
+            pengirim.tambahTransaksi(transaksi);
+            penerima.tambahTransaksi(transaksi);
+            System.out.println("Transaksi berhasil!");
         } else {
-            System.out.println("Saldo tidak mencukupi untuk transfer.");
-        }
-    }
-}
-
-// Kelas untuk merepresentasikan sistem pencatatan uang
-class SistemPencatatanUang {
-    public Map<String, Nasabah> nasabahMap;
-    public Nasabah penggunaMasuk;
-
-    public SistemPencatatanUang() {
-        this.nasabahMap = new HashMap<>();
-        nasabahMap.put("admin", new Nasabah("admin", "adminpass"));
-        nasabahMap.put("user1", new Nasabah("user1", "userpass"));
-        nasabahMap.put("user2", new Nasabah("user2", "userpass"));
-    }
-
-    public boolean login(String username, String password) {
-        if (nasabahMap.containsKey(username) && nasabahMap.get(username).getPassword().equals(password)) {
-            penggunaMasuk = nasabahMap.get(username);
-            return true;
-        } else {
-            return false;
+            System.out.println("Nama pengguna tidak valid.");
         }
     }
 
-    public void logout() {
-        penggunaMasuk = null;
-    }
+    // Metode untuk menampilkan informasi pengguna berdasarkan jenis pengguna
+    public void tampilkanInfoPengguna(String namaPengguna, boolean isAdmin) {
+        if (isAdmin) {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("\nOperasi Admin:");
+            System.out.println("1. Lihat Info Semua Nasabah");
+            System.out.println("2. Lakukan Operasi pada Nasabah");
+            System.out.print("Masukkan pilihan Admin: ");
+            int pilihanAdmin = scanner.nextInt();
 
-    public void tampilkanSaldo() {
-        System.out.println("Saldo: $" + penggunaMasuk.getSaldo());
-    }
+            switch (pilihanAdmin) {
+                case 1:
+                    admin.tampilkanSemuaInfoPengguna(pengguna);
+                    break;
 
-    public void tampilkanRiwayatTransaksi() {
-        List<Transaksi> transaksiList = penggunaMasuk.getRiwayatTransaksi();
-        System.out.println("Riwayat Transaksi untuk " + penggunaMasuk.getUsername() + ":");
-        for (Transaksi transaksi : transaksiList) {
-            System.out.println("Dari: " + transaksi.getPengirim() +
-                    ", Ke: " + transaksi.getPenerima() +
-                    ", Jumlah: $" + transaksi.getJumlah());
-        }
-    }
+                case 2:
+                    admin.lakukanOperasiPadaPengguna(pilihanAdmin, pengguna);
+                    break;
 
-    public void tampilkanSemuaNasabah() {
-        if (penggunaMasuk.getUsername().equals("admin")) {
-            System.out.println("Daftar Semua Nasabah:");
-            for (Nasabah nasabah : nasabahMap.values()) {
-                System.out.println("Username: " + nasabah.getUsername() + ", Saldo: $" + nasabah.getSaldo());
+                default:
+                    System.out.println("Pilihan Admin tidak valid.");
             }
         } else {
-            System.out.println("Akses ditolak. Akses admin diperlukan.");
+            RegularUser pengguna = getRegularUser(namaPengguna);
+            if (pengguna != null) {
+                pengguna.tampilkanInfo();
+            } else {
+                System.out.println("Pengguna tidak ditemukan.");
+            }
         }
     }
 
-    public void tambahNasabah(String username, String password) {
-        if (penggunaMasuk.getUsername().equals("admin")) {
-            nasabahMap.put(username, new Nasabah(username, password));
-            System.out.println("Nasabah " + username + " ditambahkan dengan sukses.");
-        } else {
-            System.out.println("Akses ditolak. Akses admin diperlukan.");
-        }
+    public RegularUser getRegularUser(String namaPengguna) {
+        return pengguna.get(namaPengguna);
     }
 }
 
-// Kelas utama untuk menjalankan program
+// Kelas utama
 public class MainProject {
     public static void main(String[] args) {
-        SistemPencatatanUang sistemPencatatanUang = new SistemPencatatanUang();
+        Bank bank = new Bank();
+
+        RegularUser pengguna1 = new RegularUser("user1", "pass1");
+        RegularUser pengguna2 = new RegularUser("user2", "pass2");
+        bank.tambahPengguna(pengguna1);
+        bank.tambahPengguna(pengguna2);
+
         Scanner scanner = new Scanner(System.in);
+        System.out.println("Selamat datang di Aplikasi Catatan Keuangan!");
 
         while (true) {
-            System.out.println("Selamat datang di Sistem Pencatatan Uang");
-            System.out.print("Masukkan username: ");
-            String username = scanner.nextLine();
-            System.out.print("Masukkan password: ");
-            String password = scanner.nextLine();
+            System.out.println("\n1. Masuk sebagai Admin");
+            System.out.println("2. Masuk sebagai Pengguna");
+            System.out.println("3. Keluar");
+            System.out.print("Masukkan pilihan Anda: ");
+            int pilihan = scanner.nextInt();
 
-            if (sistemPencatatanUang.login(username, password)) {
-                while (true) {
-                    System.out.println("\n1. Setor");
-                    System.out.println("2. Transfer");
-                    System.out.println("3. Lihat Saldo");
-                    System.out.println("4. Lihat Riwayat Transaksi");
-                    System.out.println("5. Logout");
+            switch (pilihan) {
+                case 1:
+                    // Masuk sebagai Admin
+                    System.out.print("Masukkan nama pengguna Admin: ");
+                    String namaAdmin = scanner.next();
+                    System.out.print("Masukkan kata sandi Admin: ");
+                    String kataSandiAdmin = scanner.next();
 
-                    if (username.equals("admin")) {
-                        System.out.println("6. Lihat Semua Nasabah");
-                        System.out.println("7. Tambah Nasabah");
+                    if (namaAdmin.equals("admin") && kataSandiAdmin.equals("adminpass")) {
+                        bank.tampilkanInfoPengguna(null, true);
+                    } else {
+                        System.out.println("Kredensial Admin tidak valid.");
                     }
+                    break;
 
-                    System.out.print("Pilih opsi: ");
-                    int pilihan = Integer.parseInt(scanner.nextLine());
+                case 2:
+                    // Masuk sebagai Pengguna
+                    System.out.print("Masukkan nama pengguna Pengguna: ");
+                    String namaPengguna = scanner.next();
+                    System.out.print("Masukkan kata sandi Pengguna: ");
+                    String kataSandiPengguna = scanner.next();
 
-                    switch (pilihan) {
-                        case 1:
-                            System.out.print("Masukkan jumlah setoran: $");
-                            double jumlahSetoran = Double.parseDouble(scanner.nextLine());
-                            sistemPencatatanUang.penggunaMasuk.setor(jumlahSetoran);
-                            break;
-                        case 2:
-                            System.out.print("Masukkan username penerima: ");
-                            String usernamePenerima = scanner.nextLine();
-                            System.out.print("Masukkan jumlah transfer: $");
-                            double jumlahTransfer = Double.parseDouble(scanner.nextLine());
-                            if (sistemPencatatanUang.nasabahMap.containsKey(usernamePenerima)) {
-                                Nasabah penerima = sistemPencatatanUang.nasabahMap.get(usernamePenerima);
-                                if (sistemPencatatanUang.penggunaMasuk.getSaldo() >= jumlahTransfer) {
-                                    sistemPencatatanUang.penggunaMasuk.transfer(penerima, jumlahTransfer);
-                                } else {
-                                    System.out.println("Saldo tidak mencukupi untuk transfer.");
-                                }
-                            } else {
-                                System.out.println("Penerima tidak ditemukan.");
+                    RegularUser penggunaMasuk = bank.getRegularUser(namaPengguna);
+                    if (penggunaMasuk != null && penggunaMasuk.getNamaPengguna().equals(namaPengguna)
+                            && penggunaMasuk.getKataSandi().equals(kataSandiPengguna)) {
+
+                        while (true) {
+                            System.out.println("\n1. Lihat Informasi Saya");
+                            System.out.println("2. Transfer Uang");
+                            System.out.println("3. Logout");
+                            System.out.println("4. Lihat Riwayat Transaksi");
+                            System.out.println("5. Tambah Saldo");
+                            System.out.println("6. Ambil Saldo");
+                            System.out.print("Masukkan pilihan Anda: ");
+                            int pilihanPengguna = scanner.nextInt();
+
+                            switch (pilihanPengguna) {
+                                case 1:
+                                    // Lihat informasi pengguna
+                                    penggunaMasuk.tampilkanInfo();
+                                    break;
+
+                                case 2:
+                                    // Transfer uang
+                                    System.out.print("Masukkan nama pengguna penerima: ");
+                                    String namaPenerima = scanner.next();
+                                    System.out.print("Masukkan jumlah untuk ditransfer: ");
+                                    double jumlah = scanner.nextDouble();
+                                    bank.lakukanTransaksi(namaPengguna, namaPenerima, jumlah);
+                                    break;
+
+                                case 3:
+                                    // Logout
+                                    System.out.println("Berhasil logout.");
+                                    break;
+
+                                case 4:
+                                    // Lihat riwayat transaksi
+                                    penggunaMasuk.tampilkanRiwayatTransaksi();
+                                    break;
+
+                                case 5:
+                                    // Tambah saldo
+                                    System.out.print("Masukkan jumlah saldo yang akan ditambahkan: ");
+                                    double tambahanSaldo = scanner.nextDouble();
+                                    penggunaMasuk.tambahSaldo(tambahanSaldo);
+                                    System.out.println("Saldo berhasil ditambahkan.");
+                                    break;
+
+                                case 6:
+                                    // Ambil saldo
+                                    System.out.print("Masukkan jumlah saldo yang akan diambil: ");
+                                    double penarikanSaldo = scanner.nextDouble();
+                                    penggunaMasuk.ambilSaldo(penarikanSaldo);
+                                    break;
                             }
-                            break;
-                        case 3:
-                            sistemPencatatanUang.tampilkanSaldo();
-                            break;
-                        case 4:
-                            sistemPencatatanUang.tampilkanRiwayatTransaksi();
-                            break;
-                        case 5:
-                            sistemPencatatanUang.logout();
-                            break;
-                        case 6:
-                            if (username.equals("admin")) {
-                                sistemPencatatanUang.tampilkanSemuaNasabah();
+
+                            if (pilihanPengguna == 3) {
+                                break;
                             }
-                            break;
-                        case 7:
-                            if (username.equals("admin")) {
-                                System.out.print("Masukkan username nasabah baru: ");
-                                String usernameBaru = scanner.nextLine();
-                                System.out.print("Masukkan password nasabah baru: ");
-                                String passwordBaru = scanner.nextLine();
-                                sistemPencatatanUang.tambahNasabah(usernameBaru, passwordBaru);
-                            }
-                            break;
-                        default:
-                            System.out.println("Pilihan tidak valid. Silakan coba lagi.");
+                        }
+                    } else {
+                        System.out.println("Kredensial Pengguna tidak valid.");
                     }
+                    break;
 
-                    if (pilihan == 5) {
-                        break;
-                    }
-                }
-            } else {
-                System.out.println("Username atau password tidak valid. Silakan coba lagi.");
+                case 3:
+                    // Keluar dari program
+                    System.out.println("Keluar dari Aplikasi Catatan Keuangan. Selamat tinggal!");
+                    System.exit(0);
+
+                default:
+                    System.out.println("Pilihan tidak valid. Silakan coba lagi.");
             }
         }
     }
